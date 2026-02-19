@@ -1,139 +1,192 @@
-Problema Resolvido
+Lead Flow — Official API Orchestration
 
-Em operações comerciais é comum ocorrer:
+Sistema de orquestração de leads com envio via API Oficial do WhatsApp e fluxo automatizado de retrabalho D+3.
 
-Perda de leads indicados
+Integra Webhooks em Node.js, API REST da Extensão Chrome, Chatwoot e PostgreSQL para garantir rastreabilidade completa da operação comercial.
 
-Falta de rastreabilidade
+📌 Visão Geral da Arquitetura
 
-Retrabalho manual desorganizado
-
-Ausência de padronização na comunicação
-
-Falta de visibilidade gerencial
-
-A solução foi construída para eliminar essas falhas estruturais.
-
-Proposta de Valor
-
-A plataforma entrega:
-
-Governança operacional
-
-Automação de atribuições
-
-Follow-up estruturado (D+3 automatizado)
-
-Centralização de dados
-
-Padronização de comunicação oficial
-
-Base preparada para inteligência preditiva
-
-Arquitetura Estratégica
-
-Extensão Corporativa
-→ Webhooks Estruturados
-→ Normalização e Validação de Dados
+Extensão Chrome (API REST)
+→ Webhook Node.js
+→ Tratamento e validação de dados
 → Integração com Chatwoot
 → Persistência em PostgreSQL
-→ Disparo via API Oficial (template com botão 24h)
+→ Disparo via API Oficial WhatsApp
 
-Arquitetura desenhada com foco em:
+🔹 FLUXO 1 — API OFICIAL
 
-Escalabilidade
+Fluxo principal responsável por registrar, atribuir e enviar mensagem oficial ao lead indicado pelo consultor.
 
-Segurança
+🎯 Objetivo
 
-Baixo acoplamento
+Garantir que todo lead indicado:
 
-Expansão futura para IA e BI
+Seja registrado no banco
 
- Modelo Operacional
- Indicação e Contato Oficial
+Seja atribuído corretamente
 
-Registro estruturado do lead
+Receba mensagem oficial padronizada
 
-Validação automática de existência
+Tenha rastreabilidade completa
 
-Criação de contato e conversa quando necessário
+🧩 Origem
 
-Atribuição automática ao consultor
+Extensão personalizada do Google Chrome utilizada na tela de ligação.
 
-Envio de mensagem oficial padronizada
+A extensão realiza chamada via API REST para o backend Node.js enviando:
 
- Retrabalho Inteligente (D+3)
+Nome
 
-Processo automatizado diário
+Telefone
 
-Reprocessamento estruturado de oportunidades
+CNPJ
 
-Criação de nova conversa quando aplicável
+Consultor responsável
 
-Registro completo de histórico
+Status de indicação
 
-Resultado: nenhuma oportunidade fica estagnada.
+⚙ Processamento no Backend (Node.js)
 
- Governança de Dados
+Recebe requisição via Webhook
 
-A base em PostgreSQL permite:
+Normaliza dados (JSON parsing)
 
-Histórico completo de leads
+Valida campos obrigatórios
 
-Identificação de origem
+Verifica existência do contato no Chatwoot
 
-Controle por consultor
+📌 Cenário A — Contato não existe
 
-Classificação de status
+Cria contato no Chatwoot
 
-Rastreabilidade de retrabalhos
+Cria conversa
 
-Isso transforma dados operacionais em ativos estratégicos.
+Registra mensagem inicial
 
- Impacto Estratégico
+Persiste lead no PostgreSQL
 
-A implementação proporciona:
+Atribui conversa ao consultor
 
-Redução de perda de oportunidades
+Envia template via API Oficial (botão interativo 24h)
 
-Aumento de produtividade comercial
+📌 Cenário B — Contato já existe
 
-Padronização institucional
+Reatribui conversa ao consultor
 
-Maior previsibilidade de conversão
+Atualiza registro no banco
 
-Visibilidade executiva da operação
+Envia mensagem oficial
 
- Stack Tecnológica
+🗄 Persistência
 
-API Oficial WhatsApp (Meta)
+Cada lead recebe:
 
-Chatwoot
+Identificador único
+
+Origem (API Oficial)
+
+Data de criação
+
+Status operacional
+
+Controle de retrabalho
+
+🔁 FLUXO 2 — RETRABALHO API OFICIAL (D+3)
+
+Fluxo automatizado responsável por reprocessar leads não convertidos.
+
+Executado diariamente às 09:00.
+
+🎯 Objetivo
+
+Evitar estagnação de oportunidades comerciais.
+
+Garantir segundo contato estruturado após 3 dias.
+
+⚙ Processamento
+
+Consulta PostgreSQL buscando leads com 3 dias
+
+Filtra leads qualificados e não convertidos
+
+Verifica existência no Chatwoot
+
+Reprocessa envio
+
+📌 Caso contato não exista
+
+Cria contato
+
+Cria nova conversa
+
+Envia nova mensagem oficial
+
+Marca como retrabalho_api_oficial
+
+📌 Caso contato já exista
+
+Cria nova conversa
+
+Envia novo template
+
+Atualiza status no banco
+
+🏗 Stack Tecnológica
+
+Backend:
+
+Node.js
+
+Express (API REST)
+
+Webhooks estruturados
+
+Extensão:
+
+Google Chrome Extension
+
+Comunicação via API REST
+
+Banco de Dados:
 
 PostgreSQL
 
-Webhooks customizados
+Mensageria:
 
-Extensão Google Chrome
+API Oficial WhatsApp (Meta)
 
-Manipulação estruturada de JSON
+Gestão de Conversas:
 
-Arquitetura preparada para integração com:
+Chatwoot
 
-Modelos de Inteligência Artificial
+Manipulação de Dados:
 
-Ferramentas de Business Intelligence
+JSON estruturado
 
-Dashboards executivos
+Validações e normalização de payload
 
- Roadmap Estratégico
+🔐 Governança e Controle
 
-Implementação de Lead Scoring com IA
+O sistema garante:
 
-Classificação automática de prioridade
+Registro completo de cada lead
 
-Dashboard executivo com métricas em tempo real
+Separação clara entre fluxo principal e retrabalho
 
-Análise preditiva de conversão
+Histórico de interações
 
-Sistema de alertas inteligentes
+Controle por consultor
+
+Rastreabilidade de envio oficial
+
+📈 Benefícios Operacionais
+
+Redução de perda de leads
+
+Automatização do follow-up
+
+Padronização institucional
+
+Maior controle gerencial
+
+Arquitetura preparada para escalar
