@@ -1,0 +1,1379 @@
+{
+  "name": "API OFICIAL (META)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "indicação_3c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1312,
+        -528
+      ],
+      "id": "727deeea-09a8-4563-a346-4736a301c4cd",
+      "name": "INDICAÇÃO",
+      "webhookId": "75589aba-d317-4145-b5c8-712a1b437b9d"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "MENSAGEMCHAT",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        48
+      ],
+      "id": "4ee0dc86-d14e-4169-9f49-d29f875865f8",
+      "name": "MENSAGEM",
+      "webhookId": "92e3e549-96de-41a6-977f-759b27f7b6de"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\n// Campos de entrada\nconst campoCnpj = String(body.cnpj || \"\");\nconst razaoOriginal = String(body.razao_social || \"\");\nconst telefone = body.telefone;\nconst consultor = body.consultor;\nconst protocolo = body.protocolo;\n\n// Variáveis finais\nlet cnpjFinal = \"\";\nlet razaoFinal = \"\";\nlet origemFinal = body.origem || \"\";\n\n// 🔹 CASO 1 → \"CNPJ - RAZÃO SOCIAL\" → DISCADOR\nif (campoCnpj.includes(\" - \")) {\n  const partes = campoCnpj.split(\" - \");\n\n  cnpjFinal = partes[0].replace(/\\D/g, \"\");\n  razaoFinal = partes.slice(1).join(\" - \").trim();\n\n  origemFinal = \"DISCADOR\";\n}\n// 🔹 CASO 2 → separado → URA\nelse {\n  cnpjFinal = campoCnpj.replace(/\\D/g, \"\");\n  razaoFinal = razaoOriginal;\n\n  origemFinal = \"URA\";\n}\n\n// Identificador padronizado\nconst identificador = `${cnpjFinal} - ${razaoFinal}`;\n\n// ✅ Retorno LIMPO, sem duplicar campos\nreturn [\n  {\n    json: {\n      protocolo,\n      telefone,\n      consultor,\n      origem: origemFinal,\n\n      identificador,\n      CNPJ: cnpjFinal,\n      \"RAZÃO SOCIAL\": razaoFinal\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        -528
+      ],
+      "id": "39a3c8ec-3784-49ec-9339-0efe057fa02a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 📅 Data/hora atual formatada\nconst now = new Date();\nconst dataHoraFormatada = now.toLocaleString(\"pt-BR\", {\n  timeZone: \"America/Sao_Paulo\",\n  hour12: false,\n});\n\n// 📞 Pega o telefone do caminho correto\nlet numeroOriginal = $json.TELEFONE|| \"\";\n\n// 🧹 Remove o código do país (55) se existir\nnumeroOriginal = numeroOriginal.replace(/^55/, \"\");\n\n// 🔢 Extrai DDD e número\nlet ddd = numeroOriginal.slice(0, 2);\nlet numeroSemDdd = numeroOriginal.slice(2);\n\n// ➕ Adiciona 9 se o número tiver apenas 8 dígitos\nif (numeroSemDdd.length === 8) {\n  numeroSemDdd = \"9\" + numeroSemDdd;\n}\n\n// 📱 Número final formatado\nconst numeroFormatado = ddd + numeroSemDdd;\n\n// 🔁 Retorna os dados\nreturn [\n  {\n    json: {\n      telefoneFormatado: numeroFormatado,\n      dataHora: dataHoraFormatada\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -688
+      ],
+      "id": "82e1ec11-7ca1-4912-be6c-cc3e2844d897",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -432,
+        -544
+      ],
+      "id": "c8dbec57-6e48-4119-a5aa-5641ef10e7fb",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f0e5942b-1cb6-4c55-b63c-39f76a1df32d",
+              "name": "razão social",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a39d62f7-b02c-4ab6-a5f5-ff885e0a7b8c",
+              "name": "CAIXA",
+              "value": "={{ $json.origem }}",
+              "type": "string"
+            },
+            {
+              "id": "b6e5f8a5-abea-408e-baa9-01bca5f4551c",
+              "name": "TELEFONE",
+              "value": "={{ $json.telefone.replace(/\\D/g,'').slice(2) }}",
+              "type": "string"
+            },
+            {
+              "id": "a9d5d37f-339c-4f13-8888-b5c3c086043f",
+              "name": "SID",
+              "value": "={{ $json.protocolo }}",
+              "type": "string"
+            },
+            {
+              "id": "8a7d78b6-2dcf-4dfe-bdc2-beb350394d55",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "46015e1a-42ee-4cee-b155-78dedcb1ae0b",
+              "name": "CONSULTOR",
+              "value": "={{ $json.consultor }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -832,
+        -528
+      ],
+      "id": "3a8dea0f-7619-4862-bcce-7a03a35b75be",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0bc7a6b2-aa06-446a-9e17-0ea17b608b83",
+              "name": "TELEFONE",
+              "value": "={{ $json.telefoneFormatado }}",
+              "type": "string"
+            },
+            {
+              "id": "51ac0349-2fb9-4536-80db-5c3e5bce61e9",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"razão social\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5bccacb8-c8ea-4479-8b7e-22e2dd7bff77",
+              "name": "CAIXA",
+              "value": "={{ $json.CAIXA }}",
+              "type": "string"
+            },
+            {
+              "id": "36dd7be7-68a4-4297-9443-26b84292e1aa",
+              "name": "SID",
+              "value": "={{ $json.SID }}",
+              "type": "string"
+            },
+            {
+              "id": "e16f11ba-3554-4b24-a5b0-d5a7cc6b7c4c",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "fe5e86a4-2e95-4bc7-82c6-fd1858045d91",
+              "name": "CONSULTOR",
+              "value": "={{ $json.CONSULTOR }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        -544
+      ],
+      "id": "e1e500c2-d7cf-47dd-99df-b6b34b5a154b",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbx3qmdgsRF6i63yaBPbw3BzCV4ZaTTRksasch_pT4rJ__xS8KTO_mz8lKtpGp3OMiariQ/dev/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"run\",\n  \"name\": \"sheetApi\",\n  \"par\": {\n    \"consultor\": \"{{ $json.CONSULTOR }}\",\n    \"socio\": \"{{ $json['RAZÃO SOCIAL'] }}\",\n    \"cnpj\": \"{{ $json.CNPJ }}\",\n    \"email\": \"SEM@GMAIL.COM\",\n    \"telefone\": \"{{ $json.TELEFONE }}\",\n    \"razaoSocial\": \"{{ $json['RAZÃO SOCIAL'] }}\",\n    \"print\": \"{{ $json.SID }}\",\n    \"origem\": \"{{ $json.CAIXA }}\",\n    \"testeorigem\": \"PRODUÇÃO\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        -544
+      ],
+      "id": "8de5eb23-1ec1-462b-8a67-52c67f4f5ff2",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\n// Campos de entrada\nconst campoCnpj = String(body.cnpj || \"\");\nconst razaoOriginal = String(body.razao_social || \"\");\nconst telefone = body.telefone;\nconst consultor = body.consultor;\nconst protocolo = body.protocolo;\n\n// Variáveis finais\nlet cnpjFinal = \"\";\nlet razaoFinal = \"\";\nlet origemFinal = body.origem || \"\";\n\n// 🔹 CASO 1 → \"CNPJ - RAZÃO SOCIAL\" → DISCADOR\nif (campoCnpj.includes(\" - \")) {\n  const partes = campoCnpj.split(\" - \");\n\n  cnpjFinal = partes[0].replace(/\\D/g, \"\");\n  razaoFinal = partes.slice(1).join(\" - \").trim();\n\n  origemFinal = \"DISCADOR\";\n}\n// 🔹 CASO 2 → separado → URA\nelse {\n  cnpjFinal = campoCnpj.replace(/\\D/g, \"\");\n  razaoFinal = razaoOriginal;\n\n  origemFinal = \"URA\";\n}\n\n// Identificador padronizado\nconst identificador = `${cnpjFinal} - ${razaoFinal}`;\n\n// ✅ Retorno LIMPO, sem duplicar campos\nreturn [\n  {\n    json: {\n      protocolo,\n      telefone,\n      consultor,\n      origem: origemFinal,\n\n      identificador,\n      CNPJ: cnpjFinal,\n      \"RAZÃO SOCIAL\": razaoFinal\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        48
+      ],
+      "id": "ad57584b-07dd-4558-8e8d-2b9fe94201a4",
+      "name": "DADOS"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0bc7a6b2-aa06-446a-9e17-0ea17b608b83",
+              "name": "TELEFONE",
+              "value": "={{ $json.telefone.replace(/\\D/g,'').slice(2) }}",
+              "type": "string"
+            },
+            {
+              "id": "51ac0349-2fb9-4536-80db-5c3e5bce61e9",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5bccacb8-c8ea-4479-8b7e-22e2dd7bff77",
+              "name": "CAIXA",
+              "value": "={{ $json.origem }}",
+              "type": "string"
+            },
+            {
+              "id": "e16f11ba-3554-4b24-a5b0-d5a7cc6b7c4c",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "fe5e86a4-2e95-4bc7-82c6-fd1858045d91",
+              "name": "CONSULTOR",
+              "value": "={{ $json.consultor }}",
+              "type": "string"
+            },
+            {
+              "id": "df3f3472-7e32-47b5-b1b8-577a0f69b703",
+              "name": "caixa (meta)",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "e3fdc455-b546-4cec-b383-49a921db82f7",
+              "name": "DATA",
+              "value": "={{ new Date().toLocaleDateString('pt-BR') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -848,
+        48
+      ],
+      "id": "2b7858b5-5763-48f5-b893-734010449063",
+      "name": "formatar dados"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "889238430950600",
+        "recipientPhoneNumber": "={{ \"+55\" + $json.TELEFONE }}",
+        "template": "boas_vindas|pt_BR",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json[\"RAZÃO SOCIAL\"] }}"
+                  },
+                  {
+                    "text": "={{ $json.CNPJ }}"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-SIM"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-NÃO"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        384
+      ],
+      "id": "8a32c07b-599e-45fa-9879-70af9f3a9807",
+      "name": "ENVIAR MENSAGEM",
+      "webhookId": "4aa0fd11-d0d6-4f99-bf9c-82804407172c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "MwJNBCIIqhOcm5qU",
+          "name": "API OFICIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1808,
+        -112
+      ],
+      "id": "144a44a5-76ff-42e7-9816-83b388e1a8c5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapeamento NOME DO CONSULTOR -> ID DO CHATWOOT\nconst mapa = {\n  \"THAYANA\": 7,\n  \"LUCAS\": 12,\n  \"RODRIGO\": 39,\n  \"KAROLINA\": 14,\n  \"LARA\": 36,\n  \"ESTHER\": 38,\n  \"TAYNARA\": 35,\n  \"CAROLINE\": 41,\n  \"MATHEUS\": 13,\n  \"LACIANE\": 15\n  \n};\n\n// Normaliza o nome\nconst nome = (items[0].json.CONSULTOR || \"\")\n  .trim()\n  .toUpperCase();\n\n// Busca o ID\nconst assignee_id = mapa[nome] || null;\n\n// Retorna tudo + ID do agente\nreturn [\n  {\n    json: {\n      ...items[0].json,\n      nome_normalizado: nome,\n      assignee_id\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        48
+      ],
+      "id": "645d5ba1-4e43-492a-b8db-9b7bb44e1451",
+      "name": "COLETA ID (CONSULTOR)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.conversation_id }}/assignments\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assignee_id\": {{ $json.CONSULTOR_ID }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1632,
+        32
+      ],
+      "id": "77d2ad78-1be6-489e-8908-e9b7b3bf9914",
+      "name": "ATRIBUIR CONSULTOR"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1376,
+        32
+      ],
+      "id": "d0056b53-60da-4386-9fd0-e17a22cb960e",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "315e548c-d3fe-44ed-8ee7-e82f79eef3b0",
+              "name": "CONSULTOR_ID",
+              "value": "={{ $json.assignee_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        208
+      ],
+      "id": "0f6fdb2b-40a9-4765-a35f-b14a9a6c534d",
+      "name": "ID (CONSULTOR)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0bc7a6b2-aa06-446a-9e17-0ea17b608b83",
+              "name": "TELEFONE",
+              "value": "={{ $json.TELEFONE }}",
+              "type": "string"
+            },
+            {
+              "id": "51ac0349-2fb9-4536-80db-5c3e5bce61e9",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5bccacb8-c8ea-4479-8b7e-22e2dd7bff77",
+              "name": "CAIXA",
+              "value": "={{ $json.CAIXA }}",
+              "type": "string"
+            },
+            {
+              "id": "e16f11ba-3554-4b24-a5b0-d5a7cc6b7c4c",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "fe5e86a4-2e95-4bc7-82c6-fd1858045d91",
+              "name": "CONSULTOR",
+              "value": "={{ $json.CONSULTOR }}",
+              "type": "string"
+            },
+            {
+              "id": "df3f3472-7e32-47b5-b1b8-577a0f69b703",
+              "name": "caixa (meta)",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "05a6fda6-99a5-4086-8510-57e69887c213",
+              "name": "DATA",
+              "value": "={{ new Date().toLocaleDateString('pt-BR') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "0c0dbbfb-34b3-4dac-879d-e66a722d20e3",
+      "name": "FORMATAR DADOS"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inbox_id\": {{ $json[\"caixa (meta)\"] }},\n  \"name\": \"{{ $json[\"RAZÃO SOCIAL\"] }}\",\n  \"phone_number\": \"{{ \"+55\" + $json.TELEFONE }}\",\n  \"identifier\": {{ $json.CNPJ }}\n}",
+        "options": {}
+      },
+      "name": "CRIAR CONTATO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        16
+      ],
+      "id": "598e9241-2d71-4f45-9174-b24ec5b1383a",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inbox_id\":{{ $json.payload.contact.contact_inboxes[0].inbox.id }} ,\n  \"contact_id\": \"{{ $json.payload.contact.id }}\"\n}",
+        "options": {}
+      },
+      "name": "CRIAR CONVERSA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        16
+      ],
+      "id": "b7a9e2ec-d9f7-41d9-bc80-f37c69f919be",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.id }}/messages\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"Oi, tudo bem? 💛\\n\\nSomos da *Estrelar C6 Empresas – C6 Bank* !\\n\\nConforme combinamos por telefone, vou dar continuidade ao seu atendimento por aqui.\\nEstamos indicando a empresa *{{ $json.meta.sender.name }}*, *CNPJ {{ $json.meta.sender.identifier }}* para garantir todos os benefícios do C6 Bank.\\n\\n⚠️ Ao ativar seu cadastro agora, sua empresa já pode ter acesso aos benefícios do cartão PJ, além de avaliações em linhas de crédito diretamente com o gerente de relacionamento.\\n\\nPodemos prosseguir com a ativação?\",\n  \"message_type\": \"outgoing\",\n  \"private\": false,\n  \"content_type\": \"text\"\n}\n\n\n \n\n",
+        "options": {}
+      },
+      "name": "CRIAR MENSAGEM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1088,
+        16
+      ],
+      "id": "75b98065-e568-42e4-9fe8-a8faad4dbc35",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE leads_api (\n  id SERIAL PRIMARY KEY,\n  data TEXT,\n  consultor TEXT,\n  razao_social TEXT,\n  cnpj TEXT,\n  telefone TEXT,\n  origem TEXT\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1328,
+        -128
+      ],
+      "id": "682eb580-3f40-48c0-a952-9aee5df2abdb",
+      "name": "banco de dados",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (\n  data,\n  consultor,\n  razao_social,\n  cnpj,\n  telefone,\n  origem\n) VALUES (\n  '{{ $json.DATA}}',\n  '{{ $json.CONSULTOR }}',\n  '{{ $json[\"RAZÃO SOCIAL\"] }}',\n  '{{ $json.CNPJ }}',\n  '{{ $json.TELEFONE }}',\n  '{{ $json.CAIXA }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -272
+      ],
+      "id": "9cdd8b87-8caf-4081-8cdb-96334da626ae",
+      "name": "COLETA DE LEADS | BANCO DE DADOS",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=+55{{ $json.TELEFONE }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -352,
+        -80
+      ],
+      "id": "df3d5cb3-b0ea-4647-b8b5-96c220d059e0",
+      "name": "VERIFICAR CONTATO1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        32
+      ],
+      "id": "a5f2e78a-2ee1-4b4f-8639-eb5b000a3e01",
+      "name": "Merge6"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.meta.count }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "5e347b99-604c-41c8-a4fe-ca80c435a50a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a224fe32-615e-471d-af56-ae1b888d5268",
+                    "leftValue": "={{ $json.meta.count }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        160,
+        32
+      ],
+      "id": "77d58cbe-1a02-4b29-815c-9ec667cbccbf",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.payload[0].id }}/assignments\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assignee_id\": {{ $json.assignee_id }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1168,
+        528
+      ],
+      "id": "8fcc446f-1975-4040-bd18-3cec1e345251",
+      "name": "ATRIBUIR CONSULTOR3"
+    },
+    {
+      "parameters": {
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts/{{ $json.payload[0].id }}/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        592,
+        384
+      ],
+      "id": "37766999-e739-4863-9344-35fd6edfd8bf",
+      "name": "BUSCAR ID"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        368
+      ],
+      "id": "9edff47b-e65a-402a-8ef8-3056aeeae0b3",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1408,
+        384
+      ],
+      "id": "88734fff-2e97-496f-9389-0a9034ddc416",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (\n  data,\n  consultor,\n  razao_social,\n  cnpj,\n  telefone,\n  origem\n) VALUES (\n  '{{ $json.DATA}}',\n  '{{ $json.CONSULTOR }}',\n  '{{ $json[\"RAZÃO SOCIAL\"] }}',\n  '{{ $json.CNPJ }}',\n  '{{ $json.TELEFONE }}',\n  '{{ $json.CAIXA }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1680,
+        560
+      ],
+      "id": "c974b2b7-4591-4f78-aee9-334d7e9c97ea",
+      "name": "COLETA DE LEADS | BANCO DE DADOS1",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (\n  data,\n  consultor,\n  razao_social,\n  cnpj,\n  telefone,\n  origem\n) VALUES (\n  '{{ $json.DATA}}',\n  '{{ $json.CONSULTOR }}',\n  '{{ $json[\"RAZÃO SOCIAL\"] }}',\n  '{{ $json.CNPJ }}',\n  '{{ $json.TELEFONE }}',\n  '{{ $json.CAIXA }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -672,
+        720
+      ],
+      "id": "0a403564-02ad-41d7-aec3-9bc8d114df96",
+      "name": "INSERIR NO BANCO DE DADOS",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0bc7a6b2-aa06-446a-9e17-0ea17b608b83",
+              "name": "TELEFONE",
+              "value": "={{ $json.TELEFONE }}",
+              "type": "string"
+            },
+            {
+              "id": "51ac0349-2fb9-4536-80db-5c3e5bce61e9",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5bccacb8-c8ea-4479-8b7e-22e2dd7bff77",
+              "name": "CAIXA",
+              "value": "={{ $json.LEAD }}",
+              "type": "string"
+            },
+            {
+              "id": "e16f11ba-3554-4b24-a5b0-d5a7cc6b7c4c",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "fe5e86a4-2e95-4bc7-82c6-fd1858045d91",
+              "name": "CONSULTOR",
+              "value": "={{ $json.CONSULTOR }}",
+              "type": "string"
+            },
+            {
+              "id": "df3f3472-7e32-47b5-b1b8-577a0f69b703",
+              "name": "caixa (meta)",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "05a6fda6-99a5-4086-8510-57e69887c213",
+              "name": "DATA",
+              "value": "={{ $json.DATA }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        720
+      ],
+      "id": "d5b197c5-7c8c-47f0-9934-ffbf0566800a",
+      "name": "FORMATAR DADOS1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1214180403,
+          "mode": "list",
+          "cachedResultName": "Página73",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y/edit#gid=1214180403"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        720
+      ],
+      "id": "63908173-d7f2-41bb-bc49-0ec6387a086b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        720
+      ],
+      "id": "44cf31a5-b45b-40dc-a599-e83814c42073",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "889238430950600",
+        "recipientPhoneNumber": "={{ \"+55\" + $json.TELEFONE }}",
+        "template": "boas_vindas|pt_BR",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json[\"RAZÃO SOCIAL\"] }}"
+                  },
+                  {
+                    "text": "={{ $json.CNPJ }}"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-SIM"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-NÃO"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        -112
+      ],
+      "id": "fba519fd-4681-45c5-aab2-34b095b3c835",
+      "name": "ENVIAR MENSAGEM3",
+      "webhookId": "4aa0fd11-d0d6-4f99-bf9c-82804407172c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "MwJNBCIIqhOcm5qU",
+          "name": "API OFICIAL"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "INDICAÇÃO": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MENSAGEM": {
+      "main": [
+        [
+          {
+            "node": "DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DADOS": {
+      "main": [
+        [
+          {
+            "node": "formatar dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatar dados": {
+      "main": [
+        [
+          {
+            "node": "COLETA ID (CONSULTOR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR MENSAGEM3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIAR MENSAGEM": {
+      "main": [
+        []
+      ]
+    },
+    "COLETA ID (CONSULTOR)": {
+      "main": [
+        [
+          {
+            "node": "VERIFICAR CONTATO1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ATRIBUIR CONSULTOR": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "ATRIBUIR CONSULTOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID (CONSULTOR)": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "FORMATAR DADOS": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "COLETA DE LEADS | BANCO DE DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR CONTATO": {
+      "main": [
+        [
+          {
+            "node": "CRIAR CONVERSA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR CONVERSA": {
+      "main": [
+        [
+          {
+            "node": "CRIAR MENSAGEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR MENSAGEM": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VERIFICAR CONTATO1": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge6": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "CRIAR CONTATO",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ID (CONSULTOR)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FORMATAR DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BUSCAR ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ATRIBUIR CONSULTOR3": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "BUSCAR ID": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "ATRIBUIR CONSULTOR3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR MENSAGEM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "COLETA DE LEADS | BANCO DE DADOS1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FORMATAR DADOS1": {
+      "main": [
+        [
+          {
+            "node": "INSERIR NO BANCO DE DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "FORMATAR DADOS1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6ae977a5-e0b5-4702-aad2-858631daf669",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3bbace708eb8d645cda36185b13729ee668501f5cdd17b12c7e635d7df8ba7ca"
+  },
+  "id": "UjgnDDq8jiTmArEZ",
+  "tags": []
+}

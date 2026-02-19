@@ -1,0 +1,1876 @@
+{
+  "name": "RETRABALHO API OFICIAL",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "formulario",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        144
+      ],
+      "id": "e9590a9b-c143-4858-a9a9-a59d87641394",
+      "name": "Webhook",
+      "webhookId": "87c47ae7-9aa2-4c4d-9fd1-d9b555c389bf"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        336
+      ],
+      "id": "199b08cf-4b89-47f6-afd7-698fffecf856",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM leads_api\nWHERE\n  data ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'\n  AND to_date(data, 'DD/MM/YYYY') = CURRENT_DATE - INTERVAL '3 day';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        336
+      ],
+      "id": "1cb7339d-f196-4db2-8a34-3cc43fa872bd",
+      "name": "CONSULTAR RETRABALHO (D-3)",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (data, consultor, razao_social, cnpj, telefone, origem)\nVALUES (\n  '{{$json.body.data}}',\n  '{{$json.body.consultor}}',\n  '{{$json.body.razao_social}}',\n  '{{$json.body.cnpj}}',\n  '{{$json.body.telefone}}',\n  '{{$json.body.origem}}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        144
+      ],
+      "id": "42dc4156-34d7-4349-972f-c71221ba3198",
+      "name": "criar tabela",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        464,
+        336
+      ],
+      "id": "3f3b9295-db54-45a2-b7dd-b4e4e08c7a33",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        4896,
+        320
+      ],
+      "id": "f7bc77c5-b503-4c40-b9f1-f650fef36f8b",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.STATUS }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "ffb1c1d5-0f3f-47ee-a529-75c732b85797"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "VAZIOS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c63165e4-36d4-45fc-bfcb-631ff53a9ebd",
+                    "leftValue": "={{ $json.STATUS }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PREENCHIDOS"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1328,
+        336
+      ],
+      "id": "340af672-4935-4751-ae14-e3febe808710",
+      "name": "Switch",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5344,
+        768
+      ],
+      "id": "8a834059-a72b-42a5-9336-e4496d572e57",
+      "name": "Wait",
+      "webhookId": "b49ec103-06a9-41e1-9f82-04b2f3ed2ffb"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4144,
+        96
+      ],
+      "id": "4d2810e1-dfb0-4261-b409-f789228ccc21",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapeamento NOME DO CONSULTOR -> ID DO CHATWOOT\nconst mapa = {\n  \"THAYANA\": 7,\n  \"LUCAS\": 12,\n  \"RODRIGO\": 39,\n  \"KAROLINA\": 14,\n  \"LARA\": 36,\n  \"ESTHER\": 38,\n  \"TAYNARA\": 35,\n  \"CAROLINE\": 41,\n  \"MATHEUS\": 13,\n  \"LACIANE\": 15\n  \n};\n\n// Normaliza o nome\nconst nome = (items[0].json.CONSULTOR || \"\")\n  .trim()\n  .toUpperCase();\n\n// Busca o ID\nconst assignee_id = mapa[nome] || null;\n\n// Retorna tudo + ID do agente\nreturn [\n  {\n    json: {\n      ...items[0].json,\n      nome_normalizado: nome,\n      assignee_id\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        320
+      ],
+      "id": "700df0ee-a2fb-4384-8ef1-6c0eac5da5c0",
+      "name": "COLETA ID (CONSULTOR)"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3712,
+        240
+      ],
+      "id": "a7a4db3c-6f74-4cd2-9a46-09d9de7206dc",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "315e548c-d3fe-44ed-8ee7-e82f79eef3b0",
+              "name": "CONSULTOR_ID",
+              "value": "={{ $json.assignee_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3200,
+        400
+      ],
+      "id": "29bd92b0-cb19-4366-8f34-9f532fd8f837",
+      "name": "ID (CONSULTOR)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0bc7a6b2-aa06-446a-9e17-0ea17b608b83",
+              "name": "TELEFONE",
+              "value": "={{ $json.TELEFONE }}",
+              "type": "string"
+            },
+            {
+              "id": "51ac0349-2fb9-4536-80db-5c3e5bce61e9",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5bccacb8-c8ea-4479-8b7e-22e2dd7bff77",
+              "name": "CAIXA",
+              "value": "={{ $json.CAIXA }}",
+              "type": "string"
+            },
+            {
+              "id": "e16f11ba-3554-4b24-a5b0-d5a7cc6b7c4c",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "string"
+            },
+            {
+              "id": "fe5e86a4-2e95-4bc7-82c6-fd1858045d91",
+              "name": "CONSULTOR",
+              "value": "={{ $json.CONSULTOR }}",
+              "type": "string"
+            },
+            {
+              "id": "df3f3472-7e32-47b5-b1b8-577a0f69b703",
+              "name": "caixa (meta)",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "05a6fda6-99a5-4086-8510-57e69887c213",
+              "name": "DATA",
+              "value": "={{ new Date().toLocaleDateString('pt-BR') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3200,
+        80
+      ],
+      "id": "12cc72de-e1de-46cc-aec3-817155bbb0d7",
+      "name": "FORMATAR DADOS"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inbox_id\": 152,\n  \"name\": \"{{ $json[\"RAZÃO SOCIAL\"] }}\",\n  \"phone_number\": \"{{ \"+55\" + $json.TELEFONE }}\",\n  \"identifier\": {{ $json.CNPJ }}\n}",
+        "options": {}
+      },
+      "name": "CRIAR CONTATO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2992,
+        224
+      ],
+      "id": "8893da51-6420-4194-bd6d-656ccb952a0c",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inbox_id\": 152,\n  \"contact_id\": \"{{ $json.payload.contact.id }}\"\n}",
+        "options": {}
+      },
+      "name": "CRIAR CONVERSA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3200,
+        224
+      ],
+      "id": "43b0eb4d-2897-4d98-b74c-a05dd6864029",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.id }}/messages\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"*C6 Bank PJ | Estrelar C6 Empresas.*\\n\\nAinda conseguimos avançar com a *abertura da conta PJ* da empresa: *{{ $json.meta.sender.name }}*\\nCNPJ: *{{ $json.meta.sender.identifier }}*\\n\\nAssim, sua empresa já pode solicitar *limite de cartão e crédito com o gerente de relacionamento*.\\n\\nPodemos prosseguir com a ativação?\",\n  \"message_type\": \"outgoing\",\n  \"private\": false,\n  \"content_type\": \"text\"\n}\n\n\n \n\n",
+        "options": {}
+      },
+      "name": "CRIAR MENSAGEM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3424,
+        224
+      ],
+      "id": "80483457-044a-40fa-9365-f836be36f04e",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (\n  data,\n  consultor,\n  razao_social,\n  cnpj,\n  telefone,\n  origem\n) VALUES (\n  '{{ $json.DATA}}',\n  '{{ $json.CONSULTOR }}',\n  '{{ $json[\"RAZÃO SOCIAL\"] }}',\n  '{{ $json.CNPJ }}',\n  '{{ $json.TELEFONE }}',\n  '{{ $json.CAIXA }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3696,
+        -48
+      ],
+      "id": "eef29e09-0e5f-4855-8207-d3c454952998",
+      "name": "COLETA DE LEADS | BANCO DE DADOS",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=+55{{ $json.TELEFONE }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        176
+      ],
+      "id": "0ede4bd9-23f0-4714-a557-d028b3d6a597",
+      "name": "VERIFICAR CONTATO1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2000,
+        304
+      ],
+      "id": "28893688-2ce7-45ea-ba79-9b750de68850",
+      "name": "Merge6"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.meta.count }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "5e347b99-604c-41c8-a4fe-ca80c435a50a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a224fe32-615e-471d-af56-ae1b888d5268",
+                    "leftValue": "={{ $json.meta.count }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        2480,
+        304
+      ],
+      "id": "1083b59c-755c-4082-9c82-0970c4ca2242",
+      "name": "Switch1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/contacts/{{ $json.payload[0].id }}/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2880,
+        672
+      ],
+      "id": "10809cb6-6d3c-42e8-a051-51fbef3a2efb",
+      "name": "BUSCAR ID"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3184,
+        656
+      ],
+      "id": "668ecdd2-8279-4892-8619-119fde4af8b8",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4144,
+        592
+      ],
+      "id": "206f7c2a-3d2f-4a44-946a-4eeff94ae82d",
+      "name": "Merge4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO leads_api (\n  data,\n  consultor,\n  razao_social,\n  cnpj,\n  telefone,\n  origem\n) VALUES (\n  '{{ $json.DATA}}',\n  '{{ $json.CONSULTOR }}',\n  '{{ $json[\"RAZÃO SOCIAL\"] }}',\n  '{{ $json.CNPJ }}',\n  '{{ $json.TELEFONE }}',\n  '{{ $json.CAIXA }}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4384,
+        672
+      ],
+      "id": "c6630138-b895-4432-b034-4953c3874c47",
+      "name": "COLETA DE LEADS | BANCO DE DADOS1",
+      "credentials": {
+        "postgres": {
+          "id": "BwPuthR2vgv7ACk7",
+          "name": "BANCO DE DADOS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.id }}/messages\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"*C6 Bank PJ | Estrelar C6 Empresas.*\\n\\nAinda conseguimos avançar com a *abertura da conta PJ* da empresa: *{{ $json.meta.sender.name }}*\\nCNPJ: *{{ $json.meta.sender.identifier }}*\\n\\nAssim, sua empresa já pode solicitar *limite de cartão e crédito com o gerente de relacionamento*.\\n\\nPodemos prosseguir com a ativação?\",\n  \"message_type\": \"outgoing\",\n  \"private\": false,\n  \"content_type\": \"text\"\n}\n\n\n \n\n",
+        "options": {}
+      },
+      "name": "CRIAR MENSAGEM1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3824,
+        576
+      ],
+      "id": "1cde9c2a-ffad-45fb-be73-02f5f586f68d",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inbox_id\": 152,\n  \"contact_id\": \"{{ $json.payload[0].meta.sender.id }}\"\n}",
+        "options": {}
+      },
+      "name": "CRIAR CONVERSA1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3504,
+        576
+      ],
+      "id": "cf7944d1-b2a3-454b-ae76-c3246788d12e",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me1",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        592
+      ],
+      "id": "3f4f44a3-f15e-4311-a6b3-43dcb6914ef8",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a38e1954-0a7e-4d69-9af5-9d3722dc65b8",
+              "name": "CONSULTOR",
+              "value": "={{ $json.CONSULTOR }}",
+              "type": "string"
+            },
+            {
+              "id": "33805f5b-f2f3-43db-89ce-bcd529f41677",
+              "name": "RAZÃO SOCIAL",
+              "value": "={{ $json[\"RAZÃO SOCIAL\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "46b0ff3c-be6f-4ce2-8a61-178b54be7d8a",
+              "name": "CNPJ",
+              "value": "={{ $json.CNPJ }}",
+              "type": "number"
+            },
+            {
+              "id": "526d405f-43cb-4d5a-909f-15d4ffedae6f",
+              "name": "DATA",
+              "value": "={{$now.format(\"dd/MM/yyyy\")}}",
+              "type": "string"
+            },
+            {
+              "id": "8d09d1a8-e9ff-4748-b999-6bbdb7821b71",
+              "name": "CAIXA",
+              "value": "={{ $json.LEAD }} RETRABALHO",
+              "type": "string"
+            },
+            {
+              "id": "8549a113-7011-4703-ab0d-f48c54e1ecb7",
+              "name": "TELEFONE",
+              "value": "={{ $json.TELEFONE }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3520,
+        736
+      ],
+      "id": "6bfef108-6153-4b29-8ba7-702d66d53a13",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 474194923,
+          "mode": "list",
+          "cachedResultName": "TESTE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y/edit#gid=474194923"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "CNPJ",
+              "lookupValue": "={{ $json.cnpj }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        352
+      ],
+      "id": "9d2ac3c5-14bb-4314-8541-5819c8b459a0",
+      "name": "BUSCA INDICAÇÃO",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.STATUS }}",
+                    "rightValue": "INDICAÇÃO OK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "700df511-cd8e-4ef6-b8b7-78ad0475cf80"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "OK"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e03140d2-a928-4aed-8e24-f235c1ac5bc1",
+                    "leftValue": "={{ $json.STATUS }}",
+                    "rightValue": "INDICAÇÃO OK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notStartsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        880,
+        352
+      ],
+      "id": "32dab2f7-2bd2-4a2f-9d50-a40cc84db9e4",
+      "name": "VALIDA INDICAÇÃO"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 727626156,
+          "mode": "list",
+          "cachedResultName": "INDICAÇÕES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19itKQqFsvKp7Y8nlTycO1X5OqRz4r0ekHcg_FzTtz0Y/edit#gid=727626156"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "CNPJ",
+              "lookupValue": "={{ $json.CNPJ }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1136,
+        336
+      ],
+      "id": "845003ac-7fed-4b03-a2c5-d5aa70b2be50",
+      "name": "COLETA DADOS DO LEAD",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "861793557027053",
+        "recipientPhoneNumber": "={{ \"+55\" + $json.TELEFONE }}",
+        "template": "retrabalho_2|pt_BR",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json[\"RAZÃO SOCIAL\"] }}"
+                  },
+                  {
+                    "text": "={{ $json.CNPJ }}"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-SIM"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-NÃO"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        4576,
+        96
+      ],
+      "id": "fc29078d-1afc-490e-9255-9ecdd461d9c1",
+      "name": "ENVIAR RETRABALHO",
+      "webhookId": "4aa0fd11-d0d6-4f99-bf9c-82804407172c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "MwJNBCIIqhOcm5qU",
+          "name": "API OFICIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "861793557027053",
+        "recipientPhoneNumber": "={{ \"+55\" + $json.TELEFONE }}",
+        "template": "retrabalho_2|pt_BR",
+        "components": {
+          "component": [
+            {
+              "bodyParameters": {
+                "parameter": [
+                  {
+                    "text": "={{ $json[\"RAZÃO SOCIAL\"] }}"
+                  },
+                  {
+                    "text": "={{ $json.CNPJ }}"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "button",
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-SIM"
+                }
+              }
+            },
+            {
+              "type": "button",
+              "index": 1,
+              "buttonParameters": {
+                "parameter": {
+                  "payload": "-NÃO"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        4384,
+        528
+      ],
+      "id": "8544ed1d-c3b6-4eef-a287-6b3375483050",
+      "name": "ENVIAR RETRABALHO2",
+      "webhookId": "4aa0fd11-d0d6-4f99-bf9c-82804407172c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "MwJNBCIIqhOcm5qU",
+          "name": "API OFICIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "INDICACAO_POR_SIM",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        1440
+      ],
+      "id": "10d8295a-b4bf-4f1b-81e0-ed89b8054460",
+      "name": "Webhook1",
+      "webhookId": "a4e4b6e4-e6e6-4b41-bd18-776893ec4c3f"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.conversation.contact_inbox.inbox_id }}",
+                    "rightValue": 152,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "0f1db714-1322-4006-a97b-e7521e3a05ef"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        112,
+        1440
+      ],
+      "id": "387e179c-d614-4be9-91bf-67ab2784aa09",
+      "name": "VALIDA CAIXA"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.content }}",
+                    "rightValue": "-SIM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0f1db714-1322-4006-a97b-e7521e3a05ef"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        320,
+        1440
+      ],
+      "id": "8e058e1a-4adc-43c8-b873-1f2160036a72",
+      "name": "VALIDA RESPOSTA"
+    },
+    {
+      "parameters": {
+        "jsCode": "let rawDataItems = await $input.all();\n\nlet agentsData = [];\nlet ID_DA_CONVERSA = null;\nlet agente = null;\nlet lastAssignedIndexValue = 0;\n\nfor (const itemWrapper of rawDataItems) {\n  const item = itemWrapper.json;\n\n  // Se for agente, guarda dados\n  if (item.CONSULTOR && item.ID) {\n    agentsData.push({\n      CONSULTOR: item.CONSULTOR,\n      ID: item.ID\n    });\n  }\n\n  // Se vier da planilha de controle, guarda índice\n  if (item.hasOwnProperty('indice')) {\n    lastAssignedIndexValue = parseInt(item.indice) || 0;\n  }\n\n  // captura telefone e razão social\n  if (item.ID_DA_CONVERSA) {\n    id_conversa = item.ID_DA_CONVERSA;\n  }\n  if (item[\"INBOX_ID\"]) {\n    agente = item[\"INBOX_ID\"];\n  }\n}\n\nreturn [{\n  json: {\n    consultores: agentsData,\n    lastAssignedIndex: lastAssignedIndexValue,\n    id_conversa,\n    agente\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        1440
+      ],
+      "id": "816e05c0-03b9-4f14-881e-5adb90d02c8e",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst consultores = data.consultores || [];\nconst total = consultores.length;\n\nif (total === 0) {\n  return [{ json: { error: \"Nenhum consultor disponível\" } }];\n}\n\n// índice anterior (ex: vindo do banco / sheet)\nconst currentIndex = data.lastAssignedIndex ?? 0;\n\n// calcula o índice atual\nconst assignedIndex = currentIndex % total;\nconst nextIndex = (assignedIndex + 1) % total;\n\n// 🔥 consultor escolhido\nconst consultorSelecionado = consultores[assignedIndex];\n\nreturn [{\n  json: {\n    newLastAssignedIndex: nextIndex,\n\n    // 🔥 dados do consultor\n    consultor: consultorSelecionado.CONSULTOR,\n    consultor_id: consultorSelecionado.ID,\n\n    // mantém dados do fluxo\n    id_conversa: data.id_conversa,\n    agente: data.agente\n  }\n}];\n"
+      },
+      "id": "33609b76-c48f-4c28-805b-43be294888f8",
+      "name": "Selecionar Agente1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fcea8ae-7f2e-412b-8da4-5d410b40cad5",
+              "name": "INBOX_ID",
+              "value": "={{ $json.body.conversation.contact_inbox.inbox_id }}",
+              "type": "string"
+            },
+            {
+              "id": "31f141dd-3867-4f20-a2fb-57a5e1abf097",
+              "name": "ID_DA_CONVERSA",
+              "value": "={{ $json.body.conversation.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        1600
+      ],
+      "id": "0e08d2f6-dd0c-4386-b7db-06d45c1be50c",
+      "name": "DADOS"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        1424
+      ],
+      "id": "b713e67a-922b-4c21-af2c-7ab657f34299",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CONSULTORES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ATIVO",
+              "lookupValue": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        656,
+        1440
+      ],
+      "id": "4b012d44-f139-4099-a1de-86b3a4087c3f",
+      "name": "LISTA DE CONSULTORES",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1258421090,
+          "mode": "list",
+          "cachedResultName": "indice",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8/edit#gid=1258421090"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        656,
+        1296
+      ],
+      "id": "70dc0027-38a3-4ad1-a44c-8e186d2d655d",
+      "name": "INDICE",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1258421090,
+          "mode": "list",
+          "cachedResultName": "indice",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18nLlhYlIRw1gObnj11mQQSYlr4l5iMgCDoiOzlM78Y8/edit#gid=1258421090"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 2,
+            "indice": "={{ $json.newLastAssignedIndex }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "indice",
+              "displayName": "indice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1600,
+        1232
+      ],
+      "id": "52527eba-755f-4a85-891d-6bb5678149db",
+      "name": "Update Index",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5dNFV9W3sz6Zx2gY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://chatwoot.estrelarconsultoria.com/api/v1/accounts/3/conversations/{{ $json.id_conversa }}/assignments\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api_access_token",
+              "value": "8GC9imXkVFeFRnJtrty9dbqs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assignee_id\": {{ $json.consultor_id }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1632,
+        1440
+      ],
+      "id": "e551917f-b30f-410d-9ee5-8730ce3147f7",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        592
+      ],
+      "id": "e24d7e50-46d7-43ff-a4f9-1f0ad5dcb406",
+      "name": "Wait1",
+      "webhookId": "2ae07bb9-6c02-4950-aaaf-8539ffc2e631"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "criar tabela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "CONSULTAR RETRABALHO (D-3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONSULTAR RETRABALHO (D-3)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "BUSCA INDICAÇÃO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "COLETA ID (CONSULTOR)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR RETRABALHO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COLETA ID (CONSULTOR)": {
+      "main": [
+        [
+          {
+            "node": "VERIFICAR CONTATO1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ID (CONSULTOR)": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "FORMATAR DADOS": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "COLETA DE LEADS | BANCO DE DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR CONTATO": {
+      "main": [
+        [
+          {
+            "node": "CRIAR CONVERSA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR CONVERSA": {
+      "main": [
+        [
+          {
+            "node": "CRIAR MENSAGEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR MENSAGEM": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VERIFICAR CONTATO1": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge6": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "CRIAR CONTATO",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ID (CONSULTOR)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FORMATAR DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BUSCAR ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BUSCAR ID": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "CRIAR CONVERSA1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "COLETA DE LEADS | BANCO DE DADOS1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ENVIAR RETRABALHO2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR MENSAGEM1": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRIAR CONVERSA1": {
+      "main": [
+        [
+          {
+            "node": "CRIAR MENSAGEM1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "BUSCA INDICAÇÃO": {
+      "main": [
+        [
+          {
+            "node": "VALIDA INDICAÇÃO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VALIDA INDICAÇÃO": {
+      "main": [
+        [
+          {
+            "node": "COLETA DADOS DO LEAD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COLETA DADOS DO LEAD": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIAR RETRABALHO": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIAR RETRABALHO2": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "VALIDA CAIXA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VALIDA CAIXA": {
+      "main": [
+        [
+          {
+            "node": "VALIDA RESPOSTA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Selecionar Agente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DADOS": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VALIDA RESPOSTA": {
+      "main": [
+        [
+          {
+            "node": "INDICE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LISTA DE CONSULTORES",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DADOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LISTA DE CONSULTORES": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "INDICE": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Selecionar Agente1": {
+      "main": [
+        [
+          {
+            "node": "Update Index",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "76ad05b9-5f18-44ab-9c95-c92a3059ff46",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3bbace708eb8d645cda36185b13729ee668501f5cdd17b12c7e635d7df8ba7ca"
+  },
+  "id": "MfGKxQZpUyGQIhgQ",
+  "tags": []
+}
